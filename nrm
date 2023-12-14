@@ -273,6 +273,5 @@ def main():
             spinner.fail(f"{Colors.RED}Some files do not follow the Norm.")
 
 
-
 if __name__ == "__main__":
     main()
