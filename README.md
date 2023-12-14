@@ -10,10 +10,13 @@
 ## features
 
 - prettier output (objectively so)
+  - spinner
+  - colors
+  - trims norm errors if there are more than `20`
 - timeout support
   - norminette won't try parsing a file for more than `2` seconds
 - single python3 file
-  - don't like outputs? wanna change some values around? go ahead and hack your way into it
+  - don't like some messages? wanna change some values around? go ahead and hack your way into it
 
 ## license
 

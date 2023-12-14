@@ -183,6 +183,8 @@ def main():
         for root, dirs, files in os.walk(path):
             for file in files:
                 target_files.append(Path(root) / file)
+
+    # horrible code ahead --- don't look
     def _frame(spinner):
         frames = spinner._spinner["frames"]
         frame = frames[spinner._frame_index]
@@ -207,12 +209,14 @@ def main():
             spinner._write(output)
         except UnicodeEncodeError:
             spinner._write(encode_utf_8_text(output))
+    # end of horrible code
+
     with halo.Halo(text="Running norminette...", spinner="dots") as spinner:
         errored = False
         for file in target_files:
-            spinner.text = f"Running norminette on {Colors.LIGHT_GRAY}{file}{Colors.END}..."
-            force_frame(spinner)
             if file.name.endswith(".c") or file.name.endswith(".h"):
+                spinner.text = f"Running norminette on {Colors.LIGHT_GRAY}{file}{Colors.END}..."
+                force_frame(spinner)
                 try:
                     output = run_norminette(file)
                     print("\r\033[K", end="")
