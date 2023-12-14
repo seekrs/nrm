@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Install the dependencies
-python3 -m pip install -Ur requirements.txt
+python3 -m pip install -Ur requirements.txt --break-system-packages
 
 # Make executable
 chmod +x ./nrm
@@ -9,8 +9,8 @@ chmod +x ./nrm
 # Create local bin directory 
 mkdir -p $USER/.local/bin
 
-# Move the executable to the local bin directory
-mv ./nrm $USER/.local/bin
+# Symlink the executable to the local bin directory
+ln -s ./nrm $USER/.local/bin/nrm
 
 # Add the local bin directory to the PATH
 SHELL=$(echo $SHELL | xargs basename)
