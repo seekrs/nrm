@@ -180,6 +180,14 @@ def main():
     if path == '-v' or path == '--version':
         print(f"nrm v{__version__}")
         sys.exit(0)
+    if path == '-V' or path == '--verbose':
+        from importlib.metadata import version
+        print(f"nrm v{__version__} by {__author__}")
+        print(f"Licensed under the {__license__}")
+        for pkg in ["halo", "norminette"]:
+            print(f"    {pkg} {version(pkg)}")
+        sys.exit(0)
+
 
     if len(sys.argv) > 2:
         fatal("Too many arguments")
