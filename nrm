@@ -1,0 +1,254 @@
+#!/usr/bin/env python3
+
+import sys
+import os
+from dataclasses import dataclass
+from pathlib import Path
+from norminette.lexer import Lexer, Token
+from norminette.context import Context
+from norminette.registry import Registry
+import halo
+from halo._utils import colored_frame, encode_utf_8_text
+import signal
+
+
+class Colors:
+    """ ANSI color codes """
+    BLACK = "\033[0;30m"
+    RED = "\033[0;31m"
+    GREEN = "\033[0;32m"
+    BROWN = "\033[0;33m"
+    BLUE = "\033[0;34m"
+    PURPLE = "\033[0;35m"
+    CYAN = "\033[0;36m"
+    LIGHT_GRAY = "\033[0;37m"
+    DARK_GRAY = "\033[1;30m"
+    LIGHT_RED = "\033[1;31m"
+    LIGHT_GREEN = "\033[1;32m"
+    YELLOW = "\033[1;33m"
+    LIGHT_BLUE = "\033[1;34m"
+    LIGHT_PURPLE = "\033[1;35m"
+    LIGHT_CYAN = "\033[1;36m"
+    LIGHT_WHITE = "\033[1;37m"
+    BOLD = "\033[1m"
+    FAINT = "\033[2m"
+    ITALIC = "\033[3m"
+    UNDERLINE = "\033[4m"
+    BLINK = "\033[5m"
+    NEGATIVE = "\033[7m"
+    CROSSED = "\033[9m"
+    END = "\033[0m"
+    # cancel SGR codes if we don't write to a terminal
+    if not __import__("sys").stdout.isatty():
+        for _ in dir():
+            if isinstance(_, str) and _[0] != "_":
+                locals()[_] = ""
+    else:
+        # set Windows console in VT mode
+        if __import__("platform").system() == "Windows":
+            kernel32 = __import__("ctypes").windll.kernel32
+            kernel32.SetConsoleMode(kernel32.GetStdHandle(-11), 7)
+            del kernel32
+
+
+__shared_registry = Registry()
+
+
+@dataclass
+class NormOutput:
+    file: Path
+    position: tuple[int, int]
+    error_type: str
+    message: str
+    is_error: bool
+
+    def format(self):
+        return f"{self.error_type} (at {self.position[0]}:{self.position[1]}): {self.message}"
+
+
+def run_norminette(file: Path, extra: list[str] = None) -> list[NormOutput]:
+    """Runs the norminette on a file and returns the output.
+
+    Parameters
+    ----------
+    file : Path
+        The file to run the norminette on.
+    extra : list[str], optional
+        Extra arguments to pass to the norminette, by default None
+
+    Returns
+    -------
+    list[NormOutput]
+        The norminette output.
+
+    Raises
+    ------
+    TokenError
+        If the file could not be parsed.
+    CParsingError
+        If the file could not be parsed.
+    IOError
+        If the file could not be read or is invalid.
+    TimeoutError
+        If the norminette took too long to run.
+    """
+
+    output: list[NormOutput] = []
+    target = str(file)
+    tokens: list[Token] = []
+    if target[-2:] not in [".c", ".h"]:
+        raise IOError("Target is not a valid C source/header file")
+    with open(target) as f:
+        source = f.read()
+        try:
+            lexer = Lexer(source)
+            tokens = lexer.get_tokens()
+        except KeyError as e:
+            raise IOError("Error while parsing file", e)
+    context = Context(target, tokens, added_value=extra)
+
+    def alarm_handler(signum, frame):
+        sys.stdout = sys.__stdout__
+        raise TimeoutError("Timeout while parsing file")
+
+    signal.signal(signal.SIGALRM, alarm_handler)
+    signal.alarm(2)
+
+    sys.stdout = open(os.devnull, "w")
+    __shared_registry.run(context, source)
+    sys.stdout = sys.__stdout__
+    
+    signal.alarm(0)
+
+    for error in context.errors:
+        output.append(
+            NormOutput(
+                file,
+                (error.line if error.line is not None else -1, error.col if error.col is not None else -1),
+                error.errno,
+                # Capitalize for consistency
+                error.error_msg[0].upper() + error.error_msg[1:],
+                True
+            )
+        )
+    for warning in context.warnings:
+        output.append(
+            NormOutput(
+                file,
+                (warning.line if warning.line is not None else -1, warning.col if warning.col is not None else -1),
+                warning.errno,
+                # Capitalize for consistency
+                warning.error_msg[0].upper() + warning.error_msg[1:],
+                False
+            )
+        )
+    return output
+
+
+def log(message: str, prefix: str = ">", spaces: int = 0):
+    print(f"\r{' ' * spaces}{prefix} {message}")
+
+
+def info(message: str, spaces: int = 0):
+    log(message, prefix=f"{Colors.LIGHT_BLUE}i{Colors.END}", spaces=spaces)
+
+
+def warn(message: str, spaces: int = 0):
+    log(message, prefix=f"{Colors.YELLOW}!{Colors.END}", spaces=spaces)
+
+
+def error(message: str, spaces: int = 0):
+    log(message, prefix=f"{Colors.RED}x{Colors.END}", spaces=spaces)
+
+
+def fatal(message: str, spaces: int = 0):
+    log(message, prefix=f"{Colors.RED}{Colors.BOLD}X{Colors.END}", spaces=spaces)
+
+
+def main():
+    path = '.'
+    if len(sys.argv) > 1:
+        path = sys.argv[1]
+    if len(sys.argv) > 2:
+        fatal("Too many arguments")
+        fatal(f"Usage: {sys.argv[0]} [path]")
+        sys.exit(1)
+    target_files = []
+    if not os.path.exists(path):
+        fatal(f"Error: {path} does not exist")
+        sys.exit(1)
+    if os.path.isfile(path):
+        target_files.append(Path(path))
+    else:
+        for root, dirs, files in os.walk(path):
+            for file in files:
+                target_files.append(Path(root) / file)
+    def _frame(spinner):
+        frames = spinner._spinner["frames"]
+        frame = frames[spinner._frame_index]
+
+        if spinner._color:
+            frame = colored_frame(frame, spinner._color)
+
+        text_frame = spinner.text_frame()
+        return "{0} {1}".format(
+            *[
+                (text_frame, frame)
+                if spinner._placement == "right"
+                else (frame, text_frame)
+            ][0]
+        )
+
+    def force_frame(spinner):
+        spinner.clear()
+        frame = _frame(spinner)
+        output = "\r{}".format(frame)
+        try:
+            spinner._write(output)
+        except UnicodeEncodeError:
+            spinner._write(encode_utf_8_text(output))
+    with halo.Halo(text="Running norminette...", spinner="dots") as spinner:
+        errored = False
+        for file in target_files:
+            spinner.text = f"Running norminette on {Colors.LIGHT_GRAY}{file}{Colors.END}..."
+            force_frame(spinner)
+            if file.name.endswith(".c") or file.name.endswith(".h"):
+                try:
+                    output = run_norminette(file)
+                    print("\r\033[K", end="")
+                    if len(output) != 0:
+                        has_error = any([error.is_error for error in output])
+                        if not has_error:
+                            continue
+                        log(f"{Colors.BOLD}{file}{Colors.END}:")
+                        total_errors = 0
+                        for e in output:
+                            if e.is_error:
+                                errored = True
+                                total_errors += 1
+                                if total_errors > 20:
+                                    info(f"20+ norm errors, skipping...", spaces=4)
+                                    break
+                                error(e.format(), spaces=2)
+                        for e in output:
+                            if not e.is_error:
+                                warn(e.format(), spaces=2)
+                except Exception as e:
+                    print("\r\033[K", end="")
+                    error(f"Error while checking {Colors.LIGHT_GRAY}{file}{Colors.END}: {Colors.RED}{str(e)}")
+                    continue
+                except KeyboardInterrupt:
+                    fatal("Interrupted")
+                    sys.exit(1)
+                except:
+                    fatal("Unknown error")
+                    sys.exit(1)
+        if not errored:
+            spinner.succeed(f"{Colors.BOLD}All files follow the Norm.")
+        else:
+            spinner.fail(f"{Colors.RED}Some files do not follow the Norm.")
+
+
+
+if __name__ == "__main__":
+    main()
