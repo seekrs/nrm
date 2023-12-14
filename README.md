@@ -3,6 +3,8 @@
 > 🖋️ simply a better norming experience  
 > *by [kiroussa](https://profile.intra.42.fr/users/kiroussa)*
 
+![An asciinema rendered GIF of the program being run](./demo.gif)
+
 ## what?
 
 [nrm](https://github.com/seekrs/nrm) is a [norminette](https://github.com/42School/norminette/tree/master/norminette) wrapper that simply aims to prettify your `norminette` calls.
