@@ -13,7 +13,7 @@ mkdir -p $USER/.local/bin
 mv ./nrm $USER/.local/bin
 
 # Add the local bin directory to the PATH
-SHELL=$(echo $SHELL | awk -F/ '{print $NF}')
+SHELL=$(echo $SHELL | xargs basename)
 SHELLRC=".bashrc"
 if [ $SHELL == "zsh" ]; then
 	SHELLRC=".zshrc"

@@ -18,6 +18,21 @@
 - single python3 file
   - don't like some messages? wanna change some values around? go ahead and hack your way into it
 
+## install
+
+we provided a simple shell script to install [nrm](https://github.com/seekrs/nrm)
+
+simply clone this repository and run it via your favorite shell
+```bash
+# clone the repository
+git clone https://github.com/seekrs/nrm
+cd nrm
+
+# make the installer executable and run it
+chmod +x ./install.sh
+bash ./install.sh
+``
+
 ## license
 
 this project is published into the public domain.  
