@@ -33,7 +33,7 @@ cd nrm
 # make the installer executable and run it
 chmod +x ./install.sh
 bash ./install.sh
-``
+```
 
 ## license
 
