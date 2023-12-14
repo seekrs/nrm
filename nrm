@@ -12,6 +12,10 @@ from halo._utils import colored_frame, encode_utf_8_text
 import signal
 
 
+MAX_NORM_ERRORS = 10
+FILE_TIMEOUT = 2
+
+
 class Colors:
     """ ANSI color codes """
     BLACK = "\033[0;30m"
@@ -112,7 +116,7 @@ def run_norminette(file: Path, extra: list[str] = None) -> list[NormOutput]:
         raise TimeoutError("Timeout while parsing file")
 
     signal.signal(signal.SIGALRM, alarm_handler)
-    signal.alarm(2)
+    signal.alarm(FILE_TIMEOUT)
 
     sys.stdout = open(os.devnull, "w")
     __shared_registry.run(context, source)
@@ -230,8 +234,8 @@ def main():
                             if e.is_error:
                                 errored = True
                                 total_errors += 1
-                                if total_errors > 20:
-                                    info(f"20+ norm errors, skipping...", spaces=4)
+                                if total_errors > MAX_NORM_ERRORS:
+                                    info(f"{MAX_NORM_ERRORS}+ norm errors, skipping...", spaces=4)
                                     break
                                 error(e.format(), spaces=2)
                         for e in output:

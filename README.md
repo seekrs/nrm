@@ -12,7 +12,7 @@
 - prettier output (objectively so)
   - spinner
   - colors
-  - trims norm errors if there are more than `20`
+  - trims norm errors if there are more than `10`
 - timeout support
   - norminette won't try parsing a file for more than `2` seconds
 - single python3 file
