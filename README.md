@@ -1,6 +1,6 @@
 # nrm
 
-> simply a better norming experience  
+> 🖋️ simply a better norming experience  
 > *by [kiroussa](https://profile.intra.42.fr/users/kiroussa)*
 
 ## what?
