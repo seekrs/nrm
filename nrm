@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 
+__author__ = "kiroussa"
+__version__ = "1.0.0"
+__license__ = "Public Domain"
+
 import sys
 import os
 from dataclasses import dataclass
@@ -173,6 +177,10 @@ def main():
     path = '.'
     if len(sys.argv) > 1:
         path = sys.argv[1]
+    if path == '-v' or path == '--version':
+        print(f"nrm v{__version__}")
+        sys.exit(0)
+
     if len(sys.argv) > 2:
         fatal("Too many arguments")
         fatal(f"Usage: {sys.argv[0]} [path]")

@@ -10,7 +10,7 @@ echo "Create local bin directory"
 mkdir -p $HOME/.local/bin
 
 echo "Symlink the executable to the local bin directory"
-cp ./nrm $HOME/.local/bin/nrm || ln -s $(pwd)/nrm $HOME/.local/bin/nrm || echo "Failed to copy or symlink the executable to the local bin directory" && exit 1
+ln -s $(pwd)/nrm $HOME/.local/bin/nrm || echo "Failed to symlink the executable to the local bin directory" && exit 1
 
 echo "Add the local bin directory to the PATH"
 SHELL=$(echo $SHELL | xargs basename)
