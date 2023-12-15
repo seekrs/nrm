@@ -231,6 +231,7 @@ def main():
             spinner._write(encode_utf_8_text(output))
     # end of horrible code
 
+    checked = 0
     with halo.Halo(text="Running norminette...", spinner="dots") as spinner:
         errored = False
         for file in target_files:
@@ -238,6 +239,7 @@ def main():
                 spinner.text = f"Running norminette on {Colors.LIGHT_GRAY}{file}{Colors.END}..."
                 force_frame(spinner)
                 try:
+                    checked += 1
                     output = run_norminette(file)
                     print("\r\033[K", end="")
                     if len(output) != 0:
@@ -268,9 +270,9 @@ def main():
                     fatal("Unknown error")
                     sys.exit(1)
         if not errored:
-            spinner.succeed(f"{Colors.BOLD}All files follow the Norm.")
+            spinner.succeed(f"{Colors.BOLD}All files follow the Norm.{Colors.END}{Colors.LIGHT_GRAY} ({checked} checked){Colors.END}")
         else:
-            spinner.fail(f"{Colors.RED}Some files do not follow the Norm.")
+            spinner.fail(f"{Colors.RED}Some files do not follow the Norm.{Colors.END}{Colors.LIGHT_GRAY} ({checked} checked){Colors.END}")
 
 
 if __name__ == "__main__":
