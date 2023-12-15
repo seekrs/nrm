@@ -3,7 +3,7 @@
 > 🖋️ simply a better norming experience  
 > *by [kiroussa](https://profile.intra.42.fr/users/kiroussa)*
 
-![An asciinema rendered GIF of the program being run.](./demo.gif)
+![An asciinema rendered GIF of the program being run.](https://github.com/seekrs/nrm/assets/26600206/b074e9c3-2b5a-4f55-9b7f-a7ae7cbe32c1)
 
 ## what?
 
