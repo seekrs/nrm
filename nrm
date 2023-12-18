@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 __author__ = "kiroussa"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __license__ = "Public Domain"
 
 import sys
@@ -202,6 +202,7 @@ def main():
     else:
         for root, dirs, files in os.walk(path):
             for file in files:
+                if "MacroLibX" in root: continue
                 target_files.append(Path(root) / file)
 
     # horrible code ahead --- don't look
